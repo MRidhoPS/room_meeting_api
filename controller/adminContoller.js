@@ -1,4 +1,4 @@
-const { addRoomQuery, editRoomQuery, deleteRoomQuery, addFacilitiesQuery, photoRoomQuery } = require("../model/adminModel");
+const { addRoomQuery, editRoomQuery, deleteRoomQuery, addFacilitiesQuery, photoRoomQuery, listRoombyIdQuery } = require("../model/adminModel");
 
 async function addRoomController(req, res) {
     const { name, capacity, hourly_price, description } = req.body;
@@ -25,6 +25,19 @@ async function addRoomController(req, res) {
             message: "Gagal Menambahkan Ruangan",
             error: error,
         })
+    }
+}
+
+async function listRoombyIdController(req, res) {
+
+    const {id} = req.params;
+
+    try {
+        const result = await listRoombyIdQuery(id);
+
+        res.status(200).json({ status: 200, message: "Success", data: result })
+    } catch (error) {
+        res.status(500).json({ status: 500, message: error.message })
     }
 }
 
@@ -111,4 +124,4 @@ async function uploadRoomPhotoController(req, res) {
 }
 
 
-module.exports = { addRoomController, editRoomController, deleteRoomController, addFacilitiesController, uploadRoomPhotoController }
+module.exports = { addRoomController, editRoomController, deleteRoomController, addFacilitiesController, uploadRoomPhotoController, listRoombyIdController }

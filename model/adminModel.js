@@ -10,6 +10,16 @@ async function checkingRoomQuery(id) {
     return existing[0];
 }
 
+async function listRoombyIdQuery(admin_id) {
+    const [existing] = await db.query('select name, capacity, hourly_price, description, thumbnail_photo from meeting_rooms where admin_id = ?', [admin_id]);
+
+    if (existing.length === 0) {
+        throw new Error('Meeting room tidak ditemukan');
+    }
+
+    return existing;
+}
+
 async function addRoomQuery({ name, admin_id, capacity, hourly_price, description, thumbnail_photo }) {
     const result = await db.query('INSERT INTO meeting_rooms (name, admin_id, capacity, hourly_price, description, thumbnail_photo, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())', [name, admin_id ,capacity, hourly_price, description, thumbnail_photo]);
 
@@ -62,4 +72,4 @@ async function photoRoomQuery(roomId, photoUrl) {
 }
 
 
-module.exports = { addRoomQuery, editRoomQuery, deleteRoomQuery, addFacilitiesQuery, photoRoomQuery }
+module.exports = { addRoomQuery, editRoomQuery, deleteRoomQuery, addFacilitiesQuery, photoRoomQuery, listRoombyIdQuery }
