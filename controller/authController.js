@@ -83,12 +83,12 @@ async function login(req, res) {
         const result = await loginQuery({ email });
 
         if (!result) {
-            return res.status(404).json({ message: 'User tidak ditemukan' });
+            return res.status(404).json({ message: 'Invalid Credential' });
         }
 
         const isMatch = await bcrypt.compare(password, result.password);
         if (!isMatch) {
-            return res.status(401).json({ message: 'Password salah' });
+            return res.status(401).json({ message: 'Invalid Credential' });
         }
 
         const tokenRes = generateToken(result.id, res, result.role);
@@ -98,6 +98,8 @@ async function login(req, res) {
             message: 'Login berhasil',
             token: tokenRes,
         });
+
+        console.log("Login: ", tokenRes);
 
     } catch (error) {
         console.error('Login error:', error);

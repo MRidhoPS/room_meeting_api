@@ -24,7 +24,6 @@ async function signupAdminQuery({ name, email, password, role = 'admin' }) {
 
 async function loginQuery({ email }) {
     const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
-    console.log('HASIL QUERY:', rows);
 
     return rows[0];
 }
