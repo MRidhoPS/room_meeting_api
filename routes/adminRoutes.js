@@ -1,12 +1,14 @@
 const express = require('express');
 const { verifyToken } = require('../middleware/verifyToken')
 const { checkRole } = require('../middleware/checkRole');
-const { addRoomController, editRoomController, deleteRoomController, addFacilitiesController, uploadRoomPhotoController, listRoombyIdController } = require('../controller/adminContoller');
+const { addRoomController, editRoomController, deleteRoomController, addFacilitiesController, uploadRoomPhotoController, listRoombyIdController, detailRoomController } = require('../controller/adminContoller');
 const { uploader, upload } = require('../database/cloudinary');
 
 const router = express.Router();
 
-router.get('/rooms/:id', verifyToken, checkRole('admin'), listRoombyIdController);
+router.get('/rooms/:id', verifyToken, listRoombyIdController);
+
+router.get('/rooms/:room_id/:admin_id', verifyToken, detailRoomController);
 
 // POST / admin / rooms                // buat room
 router.post('/rooms', verifyToken, checkRole('admin'), upload.single('thumbnail'), addRoomController);

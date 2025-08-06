@@ -10,8 +10,15 @@ async function checkingRoomQuery(id) {
     return existing[0];
 }
 
+async function detailRoombyIdQuery(room_id, admin_id) {
+    const existing = await db.query('select mr.id, mr.admin_id, mr.name, mr.capacity, mr.hourly_price, mr.description, rf.facility_name, rp.photo_url from meeting_rooms mr left join room_facilities rf on mr.id = rf.room_id left join room_photos rp on mr.id = rp.room_id where mr.id = ? and mr.admin_id = ?;', [room_id, admin_id]
+    );
+
+    return existing;
+}
+
 async function listRoombyIdQuery(admin_id) {
-    const [existing] = await db.query('select name, capacity, hourly_price, description, thumbnail_photo from meeting_rooms where admin_id = ?', [admin_id]);
+    const [existing] = await db.query('select id, name, capacity, hourly_price, description, thumbnail_photo from meeting_rooms where admin_id = ?', [admin_id]);
 
     if (existing.length === 0) {
         throw new Error('Meeting room tidak ditemukan');
@@ -21,7 +28,7 @@ async function listRoombyIdQuery(admin_id) {
 }
 
 async function addRoomQuery({ name, admin_id, capacity, hourly_price, description, thumbnail_photo }) {
-    const result = await db.query('INSERT INTO meeting_rooms (name, admin_id, capacity, hourly_price, description, thumbnail_photo, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())', [name, admin_id ,capacity, hourly_price, description, thumbnail_photo]);
+    const result = await db.query('INSERT INTO meeting_rooms (name, admin_id, capacity, hourly_price, description, thumbnail_photo, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())', [name, admin_id, capacity, hourly_price, description, thumbnail_photo]);
 
     console.log(result);
 
@@ -72,4 +79,4 @@ async function photoRoomQuery(roomId, photoUrl) {
 }
 
 
-module.exports = { addRoomQuery, editRoomQuery, deleteRoomQuery, addFacilitiesQuery, photoRoomQuery, listRoombyIdQuery }
+module.exports = { addRoomQuery, editRoomQuery, deleteRoomQuery, addFacilitiesQuery, photoRoomQuery, listRoombyIdQuery, detailRoombyIdQuery }
