@@ -6,17 +6,16 @@ const { uploader, upload } = require('../database/cloudinary');
 
 const router = express.Router();
 
-router.get('/rooms/:id', verifyToken, listRoombyIdController);
+router.get('/rooms/:id', verifyToken, listRoombyIdController); //done
 
-router.get('/rooms/:room_id/:admin_id', verifyToken, detailRoomController);
+router.get('/rooms/:room_id/:admin_id', verifyToken, detailRoomController); // done
 
 // POST / admin / rooms                // buat room
-router.post('/rooms', verifyToken, checkRole('admin'), upload.single('thumbnail'), addRoomController);
+router.post('/rooms', verifyToken, checkRole('admin'), upload.single('thumbnail'), addRoomController); // done
 
 // PUT / admin / rooms /: id            // edit room
-router.put('/rooms/:id', verifyToken, checkRole('admin'), editRoomController);
-// DELETE / admin / rooms /: id            // hapus room
-router.delete('/rooms/:id', verifyToken, checkRole('admin'), deleteRoomController);
+router.put('/rooms/:id', verifyToken, checkRole('admin'), editRoomController);     // hapus room // done
+router.delete('/rooms/:id', verifyToken, checkRole('admin'), deleteRoomController); // done
 
 // POST / admin / rooms /: id / photos     // upload foto room
 router.post(
@@ -24,8 +23,9 @@ router.post(
     verifyToken, checkRole('admin'),
     upload.array('photos', 5),
     uploadRoomPhotoController
-);
+); // done
+
 // POST / admin / rooms /: id / facilities // upload fasilitas
-router.post('/rooms/:roomId/facilities', verifyToken, checkRole('admin'), addFacilitiesController)
+router.post('/rooms/:roomId/facilities', verifyToken, checkRole('admin'), addFacilitiesController) // done
 
 module.exports = router;

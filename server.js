@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 const adminRouter = require('./routes/adminRoutes');
 const authRouter = require('./routes/authRoutes');
 const publicRouter = require('./routes/publicRoutes');
+const bookingRouter = require('./routes/bookingRoutes');
 
 dotenv.config();
 
@@ -23,7 +24,8 @@ app.use(cookieParser());
 app.use('/auth', authRouter);
 app.use('/users', authRouter);
 app.use('/admin', adminRouter);
-app.use('/public', publicRouter)
+app.use('/public', publicRouter);
+app.use('/booking', bookingRouter);
 
 
 const PORT = process.env.PORT || 3000;

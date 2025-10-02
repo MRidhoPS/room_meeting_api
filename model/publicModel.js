@@ -12,7 +12,19 @@ async function detailRoomQuery(id) {
     )
 
     return result;
-    
+
 }
 
-module.exports = { listRoomQuery, detailRoomQuery }
+async function bookingAvailabeQuery(roomId, date) {
+    const [rows] = await db.execute(
+        `SELECT start_time, end_time 
+     FROM bookings 
+     WHERE room_id = ? 
+       AND date = ? 
+       AND status IN ('pending', 'approved')`,
+        [roomId, date]
+    );
+    return rows;
+}
+
+module.exports = { listRoomQuery, detailRoomQuery, bookingAvailabeQuery }

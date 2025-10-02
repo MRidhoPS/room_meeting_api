@@ -1,4 +1,4 @@
-const { listRoomQuery, detailRoomQuery } = require("../model/publicModel");
+const { listRoomQuery, detailRoomQuery, bookingAvailabeQuery } = require("../model/publicModel");
 
 async function listRoomController(req, res) {
     try {
@@ -64,5 +64,74 @@ async function detailRoomController(req, res) {
     }
 }
 
+async function getRoomAvailability(req, res) {
+    const roomId = req.params.id;
+    const { date } = req.query;
 
-module.exports = { listRoomController, detailRoomController };
+    if (!date) {
+        return res.status(400).json({ status: 400, message: "Date is required" });
+    }
+
+    try {
+        // Ambil booking dari DB
+        const bookings = await bookingAvailabeQuery(roomId, date);
+
+        // Jam operasional
+        const openHour = 8;
+        const closeHour = 20;
+
+        // Helper ubah ke menit
+        function toMinutes(timeStr) {
+            if (!timeStr) return 0;
+            if (timeStr instanceof Date) {
+                return timeStr.getHours() * 60 + timeStr.getMinutes();
+            }
+            const [h, m] = timeStr.split(":");
+            return parseInt(h, 10) * 60 + parseInt(m, 10);
+        }
+
+        let availability = [];
+
+        for (let hour = openHour; hour < closeHour; hour++) {
+            const slotStart = `${hour.toString().padStart(2, "0")}:00:00`;
+            const slotEnd = `${(hour + 1).toString().padStart(2, "0")}:00:00`;
+
+            const slotStartMin = toMinutes(slotStart);
+            const slotEndMin = toMinutes(slotEnd);
+
+            let isAvailable = true;
+
+            for (let booking of bookings) {
+                const bookingStart = toMinutes(booking.start_time);
+                const bookingEnd = toMinutes(booking.end_time);
+
+                // Jika slot overlap dengan booking
+                if (!(slotEndMin <= bookingStart || slotStartMin >= bookingEnd)) {
+                    isAvailable = false;
+                    break;
+                }
+            }
+
+            availability.push({
+                time: `${slotStart} - ${slotEnd}`,
+                available: isAvailable,
+            });
+        }
+
+        return res.json({
+            status: 200,
+            message: "Success",
+            data: { roomId, date, availability },
+        });
+    } catch (error) {
+        console.error("Error getRoomAvailability:", error);
+        return res.status(500).json({ status: 500, message: error.message });
+    }
+}
+
+
+
+
+
+
+module.exports = { listRoomController, detailRoomController, getRoomAvailability };
