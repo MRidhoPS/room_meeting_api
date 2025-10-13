@@ -26,6 +26,8 @@ async function detailRoomController(req, res) {
         const room = {
             id: rows[0].id,
             name: rows[0].name,
+            address: rows[0].address,
+            city: rows[0].city,
             capacity: parseInt(rows[0].capacity),
             hourly_price: parseFloat(rows[0].hourly_price),
             description: rows[0].description,
@@ -64,70 +66,148 @@ async function detailRoomController(req, res) {
     }
 }
 
+// async function getRoomAvailability(req, res) {
+//     const roomId = req.params.id;
+//     const { date } = req.query;
+
+//     if (!date) {
+//         return res.status(400).json({ status: 400, message: "Date is required" });
+//     }
+
+//     try {
+//         // Ambil booking dari DB
+//         const bookings = await bookingAvailabeQuery(roomId, date);
+
+//         // Jam operasional
+//         const openHour = 8;
+//         const closeHour = 20;
+
+//         // Helper ubah ke menit
+//         function toMinutes(timeStr) {
+//             if (!timeStr) return 0;
+//             if (timeStr instanceof Date) {
+//                 return timeStr.getHours() * 60 + timeStr.getMinutes();
+//             }
+//             const [h, m] = timeStr.split(":");
+//             return parseInt(h, 10) * 60 + parseInt(m, 10);
+//         }
+
+//         let availability = [];
+
+//         for (let hour = openHour; hour < closeHour; hour++) {
+//             const slotStart = `${hour.toString().padStart(2, "0")}:00:00`;
+//             const slotEnd = `${(hour + 1).toString().padStart(2, "0")}:00:00`;
+
+//             const slotStartMin = toMinutes(slotStart);
+//             const slotEndMin = toMinutes(slotEnd);
+
+//             let isAvailable = true;
+
+//             for (let booking of bookings) {
+//                 const bookingStart = toMinutes(booking.start_time);
+//                 const bookingEnd = toMinutes(booking.end_time);
+
+//                 // Jika slot overlap dengan booking
+//                 if (!(slotEndMin <= bookingStart || slotStartMin >= bookingEnd)) {
+//                     isAvailable = false;
+//                     break;
+//                 }
+//             }
+
+//             availability.push({
+//                 time: `${slotStart} - ${slotEnd}`,
+//                 available: isAvailable,
+//             });
+//         }
+
+//         return res.json({
+//             status: 200,
+//             message: "Success",
+//             data: { roomId, date, availability },
+//         });
+//     } catch (error) {
+//         console.error("Error getRoomAvailability:", error);
+//         return res.status(500).json({ status: 500, message: error.message });
+//     }
+// }
+
 async function getRoomAvailability(req, res) {
     const roomId = req.params.id;
-    const { date } = req.query;
-
-    if (!date) {
-        return res.status(400).json({ status: 400, message: "Date is required" });
-    }
+    const { date } = req.query; // optional date
 
     try {
-        // Ambil booking dari DB
-        const bookings = await bookingAvailabeQuery(roomId, date);
+        // Default date = today if not provided
+        const startDate = date ? new Date(date) : new Date();
 
-        // Jam operasional
         const openHour = 8;
         const closeHour = 20;
 
-        // Helper ubah ke menit
-        function toMinutes(timeStr) {
+        const toMinutes = (timeStr) => {
             if (!timeStr) return 0;
             if (timeStr instanceof Date) {
                 return timeStr.getHours() * 60 + timeStr.getMinutes();
             }
             const [h, m] = timeStr.split(":");
             return parseInt(h, 10) * 60 + parseInt(m, 10);
-        }
+        };
 
-        let availability = [];
+        const generateAvailability = async (roomId, date) => {
+            const bookings = await bookingAvailabeQuery(roomId, date);
+            const availability = [];
 
-        for (let hour = openHour; hour < closeHour; hour++) {
-            const slotStart = `${hour.toString().padStart(2, "0")}:00:00`;
-            const slotEnd = `${(hour + 1).toString().padStart(2, "0")}:00:00`;
+            for (let hour = openHour; hour < closeHour; hour++) {
+                const slotStart = `${hour.toString().padStart(2, "0")}:00:00`;
+                const slotEnd = `${(hour + 1).toString().padStart(2, "0")}:00:00`;
 
-            const slotStartMin = toMinutes(slotStart);
-            const slotEndMin = toMinutes(slotEnd);
+                const slotStartMin = toMinutes(slotStart);
+                const slotEndMin = toMinutes(slotEnd);
 
-            let isAvailable = true;
+                let isAvailable = true;
 
-            for (let booking of bookings) {
-                const bookingStart = toMinutes(booking.start_time);
-                const bookingEnd = toMinutes(booking.end_time);
+                for (const booking of bookings) {
+                    const bookingStart = toMinutes(booking.start_time);
+                    const bookingEnd = toMinutes(booking.end_time);
 
-                // Jika slot overlap dengan booking
-                if (!(slotEndMin <= bookingStart || slotStartMin >= bookingEnd)) {
-                    isAvailable = false;
-                    break;
+                    // Overlap check
+                    if (!(slotEndMin <= bookingStart || slotStartMin >= bookingEnd)) {
+                        isAvailable = false;
+                        break;
+                    }
                 }
+
+                availability.push({
+                    time: `${slotStart} - ${slotEnd}`,
+                    available: isAvailable,
+                });
             }
 
-            availability.push({
-                time: `${slotStart} - ${slotEnd}`,
-                available: isAvailable,
-            });
+            return { date, availability };
+        };
+
+        const weeklyAvailability = [];
+
+        // Generate availability for 7 consecutive days
+        for (let i = 0; i < 7; i++) {
+            const currentDate = new Date(startDate);
+            currentDate.setDate(startDate.getDate() + i);
+            const formattedDate = currentDate.toISOString().split("T")[0];
+
+            const dayAvailability = await generateAvailability(roomId, formattedDate);
+            weeklyAvailability.push(dayAvailability);
         }
 
         return res.json({
             status: 200,
             message: "Success",
-            data: { roomId, date, availability },
+            roomId,
+            data: weeklyAvailability,
         });
     } catch (error) {
         console.error("Error getRoomAvailability:", error);
         return res.status(500).json({ status: 500, message: error.message });
     }
 }
+
 
 
 

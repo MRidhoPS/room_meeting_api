@@ -11,21 +11,27 @@ const bookingRouter = require('./routes/bookingRoutes');
 dotenv.config();
 
 const app = express();
+const allowedOrigins = [
+    'http://localhost:3000',   // web frontend
+    'http://10.152.105.5:7000',    // Android emulator akses backend
+    'http://192.168.18.13:7000'  // device fisik (ganti dengan IP laptop)
+];
+
 app.use(cors({
-    // origin: '*',
-    origin: 'http://localhost:3000',
-    credentials: true,    
+    origin: '*',
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 app.use(express.json());
 app.use(cookieParser()); 
 
-app.use('/auth', authRouter);
-app.use('/users', authRouter);
-app.use('/admin', adminRouter);
-app.use('/public', publicRouter);
-app.use('/booking', bookingRouter);
+app.use('/roomapp/auth', authRouter);
+app.use('/roomapp/users', authRouter);
+app.use('/roomapp/admin', adminRouter);
+app.use('/roomapp/public', publicRouter);
+app.use('/roomapp/booking', bookingRouter);
 
 
 const PORT = process.env.PORT || 3000;
